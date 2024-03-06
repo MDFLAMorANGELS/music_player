@@ -8,6 +8,7 @@ import Play from "./pages/Play";
 import Search from "./pages/Search";
 import Param from "./pages/Param";
 
+
 export default function App() {
   const [isTokenChecked, setIsTokenChecked] = useState(false);
 
@@ -30,7 +31,7 @@ export default function App() {
     }
     // Indiquer que la vérification du token est terminée
     setIsTokenChecked(true);
-  }, []);
+  }, [isTokenChecked]);
 
   return (
     <>

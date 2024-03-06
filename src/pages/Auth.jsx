@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { Button } from "@nextui-org/button";
+import { FaSpotify } from "react-icons/fa";
 
 function Auth() {
   const [, setToken] = useState(localStorage.getItem("token"));
@@ -33,8 +35,9 @@ function Auth() {
   }, []);
 
   return (
-    <div>
-      <button onClick={loginSpotify}>Connect to Spotify</button>
+    <div className="flex flex-col justify-center items-center">
+      <Button className="text-lg font-semibold" size="lg" color="success" onClick={loginSpotify}>Connect to Spotify <FaSpotify className="size-12" /></Button>
+      <p className="text-red-500 font-semibold opacity-80">*Application nécessite un compte spotify prenium</p>
     </div>
   );
 }

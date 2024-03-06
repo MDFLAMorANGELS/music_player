@@ -10,7 +10,10 @@ function Player() {
   const [player, setPlayer] = useState(null);
   const [deviceId, setDeviceId] = useState(null);
   const [token, setToken] = useState("");
-  const [volume, setVolumes] = useState(0.1); // État pour stocker le volume
+  const [volume, setVolumes] = useState(0.1);
+  const [isTrackPlaying, setIsTrackPlaying] = useState(false);
+  
+
 
   useEffect(() => {
     const getToken = localStorage.getItem("token");
@@ -66,11 +69,7 @@ function Player() {
     }
   }, [token]);
 
-  const togglePlay = () => {
-    if (player) {
-      player.togglePlay();
-    }
-  };
+
 
   const play = (spotifyUri) => {
     fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
@@ -84,6 +83,9 @@ function Player() {
       .then((response) => {
         if (!response.ok) {
           console.error("Failed to play track");
+          setIsTrackPlaying(false);
+        } else {
+          setIsTrackPlaying(true);
         }
       })
       .catch((err) => console.error(err));
@@ -92,6 +94,14 @@ function Player() {
   const handlePlayMusic = () => {
     const spotifyUri = "spotify:track:5wZETLL0HqalpiF0G3Zv6b";
     play(spotifyUri);
+  };
+
+  const togglePlay = () => {
+    if (!isTrackPlaying) {
+      handlePlayMusic(); 
+    } else if (player) {
+      player.togglePlay(); 
+    }
   };
 
   const previousTrack = () => {
@@ -106,25 +116,26 @@ function Player() {
     }
   };
 
-  const handleVolumeChange = (newValue) => {
-    setVolumes(newValue);
+  const handleVolumeChange = (volume) => {
+    setVolumes(volume);
     if (player) {
       player.setVolume(volume);
     }
   };
 
+
   return (
-    <div className="flex w-full py-8 rounded-t bg-green-600 justify-evenly items-center fixed bottom-0 left-0">
-      <div className="flex w-full justify-evenly items-center lg:max-w-2xl">
-        <button onClick={handlePlayMusic}>Start</button>
-        <button onClick={previousTrack}>
-          <TbPlayerSkipBack className=" size-6 hover:scale-110 transition-all" />
+    <div className="player flex w-full py-8 rounded-t bg-green-600 justify-evenly items-center fixed bottom-0 left-0">
+       <div className="flex w-full justify-evenly items-center lg:max-w-2xl">
+        {/* Removed the standalone Start button, as togglePlay now handles initial play */}
+        <button onClick={() => previousTrack()}>
+          <TbPlayerSkipBack className="size-6 hover:scale-110 transition-all" />
         </button>
         <button onClick={togglePlay} className="flex">
-          <PiPlayPause className=" size-7 hover:scale-110 transition-all" />
+          <PiPlayPause className="size-7 hover:scale-110 transition-all" />
         </button>
-        <button onClick={nextTrack}>
-          <TbPlayerSkipForward className=" size-6 hover:scale-110 transition-all" />
+        <button onClick={() => nextTrack()}>
+          <TbPlayerSkipForward className="size-6 hover:scale-110 transition-all" />
         </button>
         <div className="flex justify-center items-center w-1/4">
           <BsVolumeOffFill className="size-7 mx-2" />
