@@ -16,18 +16,13 @@
 }
 
 #root {
-  width: 100vh;
-  height: 100%;
-  padding: 20px;
-  margin-left: 70px;
+  padding: 25px;
+  margin-left: 75px;
 }
 
 body {
   min-height: 100vh;
   min-width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .magicpattern { 
@@ -101,6 +96,11 @@ a:nth-child(5):hover svg{
 }
 
 .player {
-  margin-left: 70px;
+  padding-left: 70px;
 }
 
+.auth {
+  position: absolute;
+  top: 50%;
+  left: 20%;
+}

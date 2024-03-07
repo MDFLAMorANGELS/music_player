@@ -12,21 +12,14 @@ export default function Sidebar({ user }) {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    
-    console.log(user);
-
-  }, [user])
-  
-  console.log(user);
-
   const logout = () => {
     localStorage.removeItem("token");
     navigate("/auth");
+    location.reload()
   };
 
   return (
-    <nav className=" bg-slate-300 hover:w-48 transition-all md:gap-y-unit-xl">
+    <nav className=" bg-slate-300 hover:w-48 transition-all md:gap-y-unit-xl bg-opacity-75 z-20">
       <Link
         to={"/profile"}
         className="hover:bg-slate-200 px-3 rounded hover:shadow flex flex-col justify-center items-center w-full"

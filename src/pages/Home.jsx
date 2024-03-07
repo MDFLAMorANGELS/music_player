@@ -4,7 +4,6 @@ import Playlist from "./Playlist";
 import Profile from "./Profile";
 import Play from "./Play";
 import Search from "./Search";
-import Param from "./Param";
 import Player from "../components/Player";
 import SpotifyWebApi from "spotify-web-api-js";
 import { useEffect, useState } from "react";
@@ -12,12 +11,11 @@ import { useEffect, useState } from "react";
 const spotifyApi = new SpotifyWebApi();
 
 
-
 export default function Home() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState("");
-
-
+  const [userPlaylists, setUserPlaylists] = useState(null);
+  const [loadPlaylist, setLoadPlaylist]= useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token")
@@ -28,11 +26,23 @@ export default function Home() {
         setUser(user);
       });
     }
-    console.log(token);
+    if (token) {
+      spotifyApi.setAccessToken(token);
+      spotifyApi.getUserPlaylists()
+      .then(function(data) {
+        setUserPlaylists(data)
+        // console.log('User playlists', data);
+      }, function(err) {
+        console.error(err);
+      });
+    }
 
   },[token])
 
-
+  const handlePlaylistSelect = (playlistUri) => {
+    console.log("Playlist sélectionnée:", playlistUri);
+    setLoadPlaylist(playlistUri);
+  };
 
   return (
     <>
@@ -41,10 +51,9 @@ export default function Home() {
           <Route path="/playlist" element={<Playlist />} />
           <Route path="/play" element={<Play />} />
           <Route path="/search" element={<Search />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/param" element={<Param />} />
+          <Route path="/profile"  element={<Profile user={user} userPlaylists={userPlaylists} onPlaylistSelect={handlePlaylistSelect}/>} />
         </Routes>
-      <Player />
+      <Player playlistUri={loadPlaylist} />
     </>
   );
 }

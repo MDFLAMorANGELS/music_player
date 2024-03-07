@@ -6,13 +6,36 @@ import { TbPlayerSkipForward } from "react-icons/tb";
 import { TbPlayerSkipBack } from "react-icons/tb";
 import { PiPlayPause } from "react-icons/pi";
 
-function Player() {
+function Player({playlistUri}) {
   const [player, setPlayer] = useState(null);
   const [deviceId, setDeviceId] = useState(null);
   const [token, setToken] = useState("");
   const [volume, setVolumes] = useState(0.1);
   const [isTrackPlaying, setIsTrackPlaying] = useState(false);
-  
+  const [currentTrack, setCurrentTrack] = useState(null);
+
+  // Utiliser useEffect pour écouter les événements player_state_changed
+  useEffect(() => {
+    if (!player) return;
+
+    // Écouter l'événement player_state_changed
+    player.addListener('player_state_changed', state => {
+      // Extraire les informations pertinentes de l'état de lecture
+      const { track_window, paused } = state;
+
+      // Mettre à jour l'état avec les informations de la piste en cours de lecture
+      setCurrentTrack({
+        name: track_window.current_track.name,
+        artist: track_window.current_track.artists[0].name,
+        paused: paused
+      });
+    });
+
+    // Retirer les écouteurs d'événements lors du démontage du composant
+    return () => {
+      player.removeListener('player_state_changed');
+    };
+  }, [player]);
 
 
   useEffect(() => {
@@ -25,7 +48,6 @@ function Player() {
       window.onSpotifyWebPlaybackSDKReady = initializePlayer;
     }
 
-    // Cette fonction sera appelée pour initialiser le lecteur
     function initializePlayer() {
       const spotifyPlayer = new window.Spotify.Player({
         name: "Web Playback SDK Quick Start Player",
@@ -38,7 +60,7 @@ function Player() {
       // Event listeners
       spotifyPlayer.addListener("ready", ({ device_id }) => {
         console.log("Ready with Device ID", device_id);
-        setDeviceId(device_id); // Sauvegardez l'ID de l'appareil pour une utilisation ultérieure
+        setDeviceId(device_id);
       });
 
       spotifyPlayer.addListener("not_ready", ({ device_id }) => {
@@ -69,38 +91,55 @@ function Player() {
     }
   }, [token]);
 
-
-
   const play = (spotifyUri) => {
+    console.log(spotifyUri);
+  
+    const isPlaylist = spotifyUri.includes("playlist");
+    let body;
+  
+    if (isPlaylist) {
+      body = JSON.stringify({ context_uri: spotifyUri });
+    } else {
+      body = JSON.stringify({ uris: [spotifyUri] });
+    }
+  
     fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
       method: "PUT",
-      body: JSON.stringify({ uris: [spotifyUri] }),
+      body: body,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
     })
-      .then((response) => {
-        if (!response.ok) {
-          console.error("Failed to play track");
-          setIsTrackPlaying(false);
-        } else {
-          setIsTrackPlaying(true);
-        }
-      })
-      .catch((err) => console.error(err));
+    .then((response) => {
+      if (!response.ok) {
+        console.error("Failed to play track");
+        setIsTrackPlaying(false);
+      } else {
+        setIsTrackPlaying(true);
+      }
+    })
+    .catch((err) => console.error(err));
   };
 
-  const handlePlayMusic = () => {
-    const spotifyUri = "spotify:track:5wZETLL0HqalpiF0G3Zv6b";
-    play(spotifyUri);
-  };
+  useEffect(() => {
+    if (playlistUri) {
+      play(playlistUri);
+    }
+  }, [playlistUri]);
 
   const togglePlay = () => {
+    if (player) {
+      player.togglePlay().then(() => {
+        setIsTrackPlaying(!isTrackPlaying);
+      });
+    }
+  };
+  
+  // Adjust handlePlayMusic to not call togglePlay unless necessary
+  const handlePlayMusic = (spotifyUri) => {
     if (!isTrackPlaying) {
-      handlePlayMusic(); 
-    } else if (player) {
-      player.togglePlay(); 
+      play(spotifyUri);
     }
   };
 
@@ -125,9 +164,15 @@ function Player() {
 
 
   return (
-    <div className="player flex w-full py-8 rounded-t bg-green-600 justify-evenly items-center fixed bottom-0 left-0">
+    <div className="player flex w-full py-8 rounded-t bg-green-600 justify-evenly items-center fixed bottom-0 left-0 z-10">
        <div className="flex w-full justify-evenly items-center lg:max-w-2xl">
-        {/* Removed the standalone Start button, as togglePlay now handles initial play */}
+       {currentTrack && (
+      <div className="current-track">
+        <p>Titre : {currentTrack.name}</p>
+        <p>Artiste : {currentTrack.artist}</p>
+        <p>{currentTrack.paused ? 'Paused' : 'Playing'}</p>
+      </div>
+    )}
         <button onClick={() => previousTrack()}>
           <TbPlayerSkipBack className="size-6 hover:scale-110 transition-all" />
         </button>
@@ -137,7 +182,7 @@ function Player() {
         <button onClick={() => nextTrack()}>
           <TbPlayerSkipForward className="size-6 hover:scale-110 transition-all" />
         </button>
-        <div className="flex justify-center items-center w-1/4">
+        <div className=" justify-center items-center w-1/4 hidden sm:flex">
           <BsVolumeOffFill className="size-7 mx-2" />
           <Slider
             color="secondary"

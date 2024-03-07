@@ -35,7 +35,7 @@ function Auth() {
   }, []);
 
   return (
-    <div className="flex flex-col justify-center items-center">
+    <div className="auth ">
       <Button className="text-lg font-semibold" size="lg" color="success" onClick={loginSpotify}>Connect to Spotify <FaSpotify className="size-12" /></Button>
       <p className="text-red-500 font-semibold opacity-80">*Application nécessite un compte spotify prenium</p>
     </div>

@@ -6,7 +6,6 @@ import Playlist from "./pages/Playlist";
 import Profile from "./pages/Profile";
 import Play from "./pages/Play";
 import Search from "./pages/Search";
-import Param from "./pages/Param";
 
 
 export default function App() {
@@ -43,7 +42,6 @@ export default function App() {
             <Route path="/play" element={<Play />} />
             <Route path="/search" element={<Search />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/param" element={<Param />} />
           </Route>
           <Route path="/auth" element={<Auth />} />
         </Routes>
