@@ -19,7 +19,7 @@ export default function Sidebar({ user }) {
   };
 
   return (
-    <nav className=" bg-slate-300 hover:w-48 transition-all md:gap-y-unit-xl bg-opacity-75 z-20">
+    <nav className=" bg-slate-300 hover:w-48 transition-all md:gap-y-unit-xl bg-opacity-90 z-20">
       <Link
         to={"/profile"}
         className="hover:bg-slate-200 px-3 rounded hover:shadow flex flex-col justify-center items-center w-full"

@@ -1,47 +1,84 @@
 import { useEffect, useState } from "react";
 import { Slider } from "@nextui-org/react";
-import { BsVolumeOffFill } from "react-icons/bs";
-import { BsVolumeUpFill } from "react-icons/bs";
-import { TbPlayerSkipForward } from "react-icons/tb";
-import { TbPlayerSkipBack } from "react-icons/tb";
+import { BsVolumeOffFill, BsVolumeUpFill } from "react-icons/bs";
+import { TbPlayerSkipForward, TbPlayerSkipBack } from "react-icons/tb";
 import { PiPlayPause } from "react-icons/pi";
 
-function Player({playlistUri}) {
-  const [player, setPlayer] = useState(null);
-  const [deviceId, setDeviceId] = useState(null);
-  const [token, setToken] = useState("");
-  const [volume, setVolumes] = useState(0.1);
-  const [isTrackPlaying, setIsTrackPlaying] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState(null);
+function Player({ playlistUri }) {
+
+  const [player, setPlayer] = useState(null); // État du lecteur Spotify
+  const [deviceId, setDeviceId] = useState(null); // ID du périphérique de lecture
+  const [token, setToken] = useState(""); // Jeton d'authentification Spotify
+  const [volume, setVolumes] = useState(0.1); // Volume audio
+  const [isTrackPlaying, setIsTrackPlaying] = useState(false); // État de lecture de la piste actuelle
+  const [currentTrack, setCurrentTrack] = useState(null); // Informations sur la piste actuelle
+  const [trackDuration, setTrackDuration] = useState(0); // Durée totale de la piste
+  const [elapsedTime, setElapsedTime] = useState(0); // Temps écoulé depuis le début de la piste
+  const [currentTrackId, setCurrentTrackId] = useState(null); // ID de la piste actuelle
 
   // Utiliser useEffect pour écouter les événements player_state_changed
   useEffect(() => {
     if (!player) return;
 
-    // Écouter l'événement player_state_changed
-    player.addListener('player_state_changed', state => {
-      // Extraire les informations pertinentes de l'état de lecture
+    player.addListener("player_state_changed", (state) => {
+      if (!state) return;
+    
+      const { track_window: { current_track }, paused } = state;
+      const newTrackId = current_track.id; // Obtenir l'ID de la nouvelle piste
+    
+      // Vérifier si la piste a changé
+      if (currentTrackId !== newTrackId) {
+        setCurrentTrackId(newTrackId);
+        setElapsedTime(0);
+      }
+    });
+
+    // Écouter l'événement player_state_changed pour mettre à jour les informations sur la piste actuelle
+    player.addListener("player_state_changed", (state) => {
+      console.log(state);
+
       const { track_window, paused } = state;
 
-      // Mettre à jour l'état avec les informations de la piste en cours de lecture
+      // Mettre à jour les informations sur la piste actuelle
       setCurrentTrack({
         name: track_window.current_track.name,
         artist: track_window.current_track.artists[0].name,
-        paused: paused
+        paused: paused,
+        image: track_window.current_track.album.images[1].url,
       });
+      // Mettre à jour la durée totale de la piste
+      setTrackDuration(track_window.current_track.duration_ms);
     });
 
     // Retirer les écouteurs d'événements lors du démontage du composant
     return () => {
-      player.removeListener('player_state_changed');
+      player.removeListener("player_state_changed");
     };
-  }, [player]);
+  }, [player, elapsedTime]);
 
+  // Utiliser useEffect pour gérer la progression du temps écoulé
+  useEffect(() => {
+    let intervalId;
 
+    // Mettre à jour le temps écoulé à intervalles réguliers lorsque la piste est en lecture
+    if (isTrackPlaying) {
+      intervalId = setInterval(() => {
+        setElapsedTime((prevElapsedTime) => prevElapsedTime + 1000);
+      }, 1000);
+    } else {
+      clearInterval(intervalId);
+    }
+
+    // Nettoyer l'intervalle lors du démontage du composant
+    return () => clearInterval(intervalId);
+  }, [isTrackPlaying]);
+
+  // Utiliser useEffect pour initialiser le lecteur Spotify et obtenir le jeton d'authentification
   useEffect(() => {
     const getToken = localStorage.getItem("token");
     setToken(getToken);
 
+    // Initialiser le lecteur Spotify une fois que le SDK Web Playback est prêt
     if (window.Spotify) {
       initializePlayer();
     } else {
@@ -57,7 +94,6 @@ function Player({playlistUri}) {
         volume: volume,
       });
 
-      // Event listeners
       spotifyPlayer.addListener("ready", ({ device_id }) => {
         console.log("Ready with Device ID", device_id);
         setDeviceId(device_id);
@@ -68,11 +104,13 @@ function Player({playlistUri}) {
       });
 
       spotifyPlayer.addListener("initialization_error", ({ message }) => {
-        console.error(message);
+        console.error(message); 
       });
 
       spotifyPlayer.addListener("authentication_error", ({ message }) => {
         console.error(message);
+        localStorage.removeItem("token");
+        location.reload();
       });
 
       spotifyPlayer.addListener("account_error", ({ message }) => {
@@ -81,9 +119,7 @@ function Player({playlistUri}) {
 
       spotifyPlayer.connect().then((success) => {
         if (success) {
-          console.log(
-            "The Web Playback SDK successfully connected to Spotify!"
-          );
+          console.log("The Web Playback SDK successfully connected to Spotify!"); 
         }
       });
 
@@ -91,18 +127,21 @@ function Player({playlistUri}) {
     }
   }, [token]);
 
+  // Fonction pour démarrer la lecture d'une piste ou d'une liste de lecture
   const play = (spotifyUri) => {
     console.log(spotifyUri);
-  
+
     const isPlaylist = spotifyUri.includes("playlist");
     let body;
-  
+
+    // Créer le corps de la requête en fonction du type de URI Spotify
     if (isPlaylist) {
       body = JSON.stringify({ context_uri: spotifyUri });
     } else {
       body = JSON.stringify({ uris: [spotifyUri] });
     }
-  
+
+    // Envoyer une requête pour démarrer la lecture sur le périphérique spécifié
     fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
       method: "PUT",
       body: body,
@@ -111,68 +150,100 @@ function Player({playlistUri}) {
         Authorization: `Bearer ${token}`,
       },
     })
-    .then((response) => {
-      if (!response.ok) {
-        console.error("Failed to play track");
-        setIsTrackPlaying(false);
-      } else {
-        setIsTrackPlaying(true);
-      }
-    })
-    .catch((err) => console.error(err));
+      .then((response) => {
+        if (!response.ok) {
+          console.error("Failed to play track");
+          setIsTrackPlaying(false); // Mettre à jour l'état de lecture de la piste
+        } else {
+          setIsTrackPlaying(true);
+        }
+      })
+      .catch((err) => console.error(err));
   };
 
+  // Utiliser useEffect pour démarrer la lecture lorsque l'URI de la liste de lecture est fourni
   useEffect(() => {
     if (playlistUri) {
       play(playlistUri);
     }
   }, [playlistUri]);
 
+  // Fonction pour basculer la lecture/pause
   const togglePlay = () => {
     if (player) {
       player.togglePlay().then(() => {
-        setIsTrackPlaying(!isTrackPlaying);
+        setIsTrackPlaying(!isTrackPlaying); // Mettre à jour l'état de lecture de la piste
       });
     }
   };
-  
-  // Adjust handlePlayMusic to not call togglePlay unless necessary
-  const handlePlayMusic = (spotifyUri) => {
-    if (!isTrackPlaying) {
-      play(spotifyUri);
-    }
-  };
 
+  // Fonction pour passer à la piste précédente
   const previousTrack = () => {
     if (player) {
       player.previousTrack();
+      setElapsedTime(0);
     }
   };
 
+  // Fonction pour passer à la piste suivante
   const nextTrack = () => {
     if (player) {
       player.nextTrack();
+      setElapsedTime(0);
     }
   };
 
+  // Fonction pour gérer le changement de volume
   const handleVolumeChange = (volume) => {
-    setVolumes(volume);
+    setVolumes(volume); 
     if (player) {
-      player.setVolume(volume);
+      player.setVolume(volume); // Définir le volume du lecteur Spotify
     }
   };
 
+  // Fonction pour formater la durée de la piste au format MM:SS
+  const formatDuration = (duration) => {
+    const minutes = Math.floor(duration / 60000);
+    const seconds = ((duration % 60000) / 1000).toFixed(0);
+    return `${minutes}:${(seconds < 10 ? "0" : "")}${seconds}`;
+  };
+
+  // Calculer le pourcentage de progression de la piste
+  const progressPercentage = (elapsedTime / trackDuration) * 100 || 0;
+
+  // Fonction pour gérer le changement de progression de la piste
+  const handleProgressChange = (newValue) => {
+    const newElapsedTime = (newValue / 100) * trackDuration;
+    setElapsedTime(newElapsedTime); // Mettre à jour le temps écoulé basé sur la nouvelle valeur de la barre
+    if (player) {
+      player.seek(newElapsedTime).then(() => {
+      }).catch(error => {
+        console.error("Erreur lors du saut à la nouvelle position", error); 
+      });
+    }
+  };
+
+  // Utiliser useEffect pour réinitialiser le temps écoulé lorsque la piste se termine
+  useEffect(() => {
+    if (elapsedTime > trackDuration) {
+      setElapsedTime(0);
+    }
+  }, [elapsedTime]);
 
   return (
-    <div className="player flex w-full py-8 rounded-t bg-green-600 justify-evenly items-center fixed bottom-0 left-0 z-10">
-       <div className="flex w-full justify-evenly items-center lg:max-w-2xl">
-       {currentTrack && (
-      <div className="current-track">
-        <p>Titre : {currentTrack.name}</p>
-        <p>Artiste : {currentTrack.artist}</p>
-        <p>{currentTrack.paused ? 'Paused' : 'Playing'}</p>
-      </div>
-    )}
+    <div className="player flex w-full py-4 rounded-t bg-green-600 justify-center items-center fixed bottom-0 left-0 z-10">
+      {currentTrack && (
+        <div className="current-track">
+          <img src={currentTrack.image} alt="image de l album en cours" className=" rounded-lg mx-2"/>
+          <p className="text-center p-1 font-semibold text-lg">{currentTrack.name} : {currentTrack.artist}</p>
+          {trackDuration > 0 && (
+            <p className="text-center p-1 font-semibold text-lg">
+              {formatDuration(elapsedTime)} / {formatDuration(trackDuration)}
+            </p>
+          )}
+        </div>
+      )}
+      <div className="w-full flex justify-evenly items-center p-1 my-2">
         <button onClick={() => previousTrack()}>
           <TbPlayerSkipBack className="size-6 hover:scale-110 transition-all" />
         </button>
@@ -182,7 +253,7 @@ function Player({playlistUri}) {
         <button onClick={() => nextTrack()}>
           <TbPlayerSkipForward className="size-6 hover:scale-110 transition-all" />
         </button>
-        <div className=" justify-center items-center w-1/4 hidden sm:flex">
+        <div className=" justify-center items-center w-1/3 hidden sm:flex">
           <BsVolumeOffFill className="size-7 mx-2" />
           <Slider
             color="secondary"
@@ -191,13 +262,26 @@ function Player({playlistUri}) {
             minValue={0}
             defaultValue={volume}
             aria-label="volume"
-            className="slider"
+            className="slider w-full"
             onChangeEnd={handleVolumeChange}
             size="md"
+            radius="lg"
           />
           <BsVolumeUpFill className="size-7 mx-2" />
         </div>
       </div>
+      {/* Barre de progression de la piste */}
+      {currentTrack && (
+        <Slider
+          color="foreground"
+          value={progressPercentage}
+          onChange={handleProgressChange}
+          aria-label="progress"
+          size="md"
+          className="w-1/2 opacity-90"
+          isDisabled
+        />
+      )}
     </div>
   );
 }
