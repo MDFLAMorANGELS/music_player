@@ -23,7 +23,7 @@ function Player({ playlistUri }) {
     player.addListener("player_state_changed", (state) => {
       if (!state) return;
     
-      const { track_window: { current_track }, paused } = state;
+      const { track_window: { current_track } } = state;
       const newTrackId = current_track.id; // Obtenir l'ID de la nouvelle piste
     
       // Vérifier si la piste a changé
@@ -35,7 +35,6 @@ function Player({ playlistUri }) {
 
     // Écouter l'événement player_state_changed pour mettre à jour les informations sur la piste actuelle
     player.addListener("player_state_changed", (state) => {
-      console.log(state);
 
       const { track_window, paused } = state;
 
@@ -54,6 +53,7 @@ function Player({ playlistUri }) {
     return () => {
       player.removeListener("player_state_changed");
     };
+
   }, [player, elapsedTime]);
 
   // Utiliser useEffect pour gérer la progression du temps écoulé
@@ -109,8 +109,8 @@ function Player({ playlistUri }) {
 
       spotifyPlayer.addListener("authentication_error", ({ message }) => {
         console.error(message);
-        localStorage.removeItem("token");
-        location.reload();
+        // localStorage.removeItem("token");
+        // location.reload();
       });
 
       spotifyPlayer.addListener("account_error", ({ message }) => {
@@ -129,7 +129,6 @@ function Player({ playlistUri }) {
 
   // Fonction pour démarrer la lecture d'une piste ou d'une liste de lecture
   const play = (spotifyUri) => {
-    console.log(spotifyUri);
 
     const isPlaylist = spotifyUri.includes("playlist");
     let body;
@@ -231,10 +230,13 @@ function Player({ playlistUri }) {
   }, [elapsedTime]);
 
   return (
-    <div className="player flex w-full py-4 rounded-t bg-green-600 justify-center items-center fixed bottom-0 left-0 z-10">
+    <div className="player flex w-full py-3 rounded-t bg-green-600 justify-center items-center fixed bottom-0 left-0 z-10">
+      {currentTrack && (
+        <img src={currentTrack.image} alt="image de l album en cours" className=" rounded-lg mx-2 sm:mx-6 md:scale-110"/>
+      )}
+      <div className="flex flex-col justify-center items-center w-full">
       {currentTrack && (
         <div className="current-track">
-          <img src={currentTrack.image} alt="image de l album en cours" className=" rounded-lg mx-2"/>
           <p className="text-center p-1 font-semibold text-lg">{currentTrack.name} : {currentTrack.artist}</p>
           {trackDuration > 0 && (
             <p className="text-center p-1 font-semibold text-lg">
@@ -262,7 +264,7 @@ function Player({ playlistUri }) {
             minValue={0}
             defaultValue={volume}
             aria-label="volume"
-            className="slider w-full"
+            className="slider w-full md:max-w-40"
             onChangeEnd={handleVolumeChange}
             size="md"
             radius="lg"
@@ -278,10 +280,11 @@ function Player({ playlistUri }) {
           onChange={handleProgressChange}
           aria-label="progress"
           size="md"
-          className="w-1/2 opacity-90"
+          className=" opacity-90 w-2/3"
           isDisabled
         />
       )}
+      </div>
     </div>
   );
 }

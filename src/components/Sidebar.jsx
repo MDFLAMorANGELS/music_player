@@ -27,13 +27,13 @@ export default function Sidebar({ user }) {
         <Avatar isBordered className="my-5 min-h-10" color="success" src={user?.images?.[1]?.url} />
         <h2 className="text-black font-semibold">{user?.display_name}</h2>
       </Link>
-      <Link
+      {/* <Link
         to={"/playlist"}
         className="hover:bg-slate-200 p-3 rounded hover:shadow flex flex-col justify-center items-center w-full"
       >
         <BsCollectionPlay className=" size-10 fill-black  transition-all rounded  hover:scale-105" />
         <p className=" text-black font-semibold text-center">Playlist</p>
-      </Link>
+      </Link> */}
       <Link
         to={"/play"}
         className="hover:bg-slate-200 p-3 rounded hover:shadow flex flex-col justify-center items-center w-full"

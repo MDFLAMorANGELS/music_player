@@ -1,35 +1,43 @@
-import { Card, CardFooter, Image, Button } from "@nextui-org/react";
+import { Card, CardFooter, Image, Button, Skeleton } from "@nextui-org/react";
 import { CiPlay1 } from "react-icons/ci";
+import { useNavigate } from "react-router-dom";
 
 
 export default function Profile({ user, userPlaylists, onPlaylistSelect }) {
-  console.log(userPlaylists);
+
+  //console.log(userPlaylists);
+  const navigate = useNavigate();
+
 
   const loadPlaylist = (playlistUri) => {
-    console.log(playlistUri);
+    //console.log(playlistUri);
     onPlaylistSelect(playlistUri);
+  }
 
+  const navToPlaylist = (playlistUri) => {
+    const playlistId = playlistUri.split(":")[2]; // Récupérer l'identifiant de la playlist de l'URI
+    navigate(`/playlist/${playlistId}`);
   }
 
   return (
-    <div className="flex flex-col justify-center items-start">
+    <div className="flex flex-col justify-center items-start sm:p-7">
       <div>
         <p className="text-xl py-2 text-white font-semibold">Profile</p>
-        <h2 className="text-6xl font-semibold text-green-500">
+        <h2 className=" text-5xl sm:text-6xl font-semibold text-green-500">
           {user?.display_name}
         </h2>
         <p className="text-md text-white font-semibold text-right">
           Follow {user?.followers.total}
         </p>
       </div>
-      <div className="mt-12 mb-24 w-full">
+      <div className="mt-8 w-full mb-48 md:mb-34">
       <p className="text-xl py-2 text-white font-semibold">Playlist</p>
-        <ul className="flex md:justify-start justify-center items-center gap-10 flex-wrap my-2">
+        <ul className="flex xl:justify-start justify-center items-center gap-5 sm:gap-10 flex-wrap my-2">
           {userPlaylists?.items?.slice().reverse().map((playlist) => (
             <Card
               isFooterBlurred
               radius="lg"
-              className="border-none"
+              className="v"
               key={playlist.id}
             >
               <Image
@@ -47,12 +55,28 @@ export default function Profile({ user, userPlaylists, onPlaylistSelect }) {
                   color="default"
                   radius="lg"
                   size="sm"
-                >
+                  onClick={() => navToPlaylist(playlist.uri)} // Utilisez la fonction loadPlaylist directement
+                  >
                   {playlist?.name}
                 </Button>
               </CardFooter>
             </Card>
-          )) || <li>No playlists found</li>}
+          )) || <Card  className="w-[250px] h-[250px] border-none space-y-5 p-4" radius="lg">
+          <Skeleton className="rounded-lg">
+            <div className="h-24 rounded-lg bg-default-300"></div>
+          </Skeleton>
+          <div className="space-y-3">
+            <Skeleton className="w-3/5 rounded-lg">
+              <div className="h-3 w-3/5 rounded-lg bg-default-200"></div>
+            </Skeleton>
+            <Skeleton className="w-4/5 rounded-lg">
+              <div className="h-3 w-4/5 rounded-lg bg-default-200"></div>
+            </Skeleton>
+            <Skeleton className="w-2/5 rounded-lg">  
+              <div className="h-3 w-2/5 rounded-lg bg-default-300"></div>
+            </Skeleton>
+          </div>
+        </Card>}
         </ul>
       </div>
     </div>

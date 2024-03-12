@@ -38,7 +38,7 @@ export default function App() {
         {isTokenChecked && <NavigateIfToken />}
         <Routes>
           <Route path="/" element={<Home />}>
-            <Route path="/playlist" element={<Playlist />} />
+            <Route path="/playlist/:playlistId" element={<Playlist />} />
             <Route path="/play" element={<Play />} />
             <Route path="/search" element={<Search />} />
             <Route path="/profile" element={<Profile />} />

@@ -48,7 +48,7 @@ export default function Home() {
     <>
       <Sidebar user={user} />
         <Routes>
-          <Route path="/playlist" element={<Playlist />} />
+          <Route path="/playlist/:playlistId" playlistUri={loadPlaylist}  element={<Playlist />} />
           <Route path="/play" element={<Play />} />
           <Route path="/search" element={<Search />} />
           <Route path="/profile"  element={<Profile user={user} userPlaylists={userPlaylists} onPlaylistSelect={handlePlaylistSelect}/>} />
