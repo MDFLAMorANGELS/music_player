@@ -44,7 +44,7 @@ export default function Profile({ user, userPlaylists, onPlaylistSelect }) {
                 alt="Playlist image"
                 className="object-cover"
                 height={250}
-                src={playlist?.images[0]?.url || "https://www.svgrepo.com/show/346881/file-unknow.svg"}
+                src={(playlist.images && playlist.images.length > 0) ? playlist.images[0].url : "https://www.svgrepo.com/show/346881/file-unknow.svg"}
                 width={250}
               />
               <CardFooter className="justify-between before:bg-white/10 border-white/20 border-1 overflow-hidden py-1 absolute before:rounded-xl rounded-large bottom-1 w-[calc(100%_-_8px)] shadow-small ml-1 z-10">
