@@ -9,7 +9,7 @@ import {Spinner} from "@nextui-org/react";
 
 const spotifyApi = new SpotifyWebApi();
 
-export default function Playlist() {
+export default function Playlist({ onTrackSelect }) {
   const { playlistId } = useParams(); // Récupérer l'ID de la playlist à partir de l'URL
   const [loadedPlaylistId, setLoadedPlaylistId] = useState(null); // État pour stocker l'ID de la playlist chargée
   const [playlist, setPlaylist] = useState(null); // État pour stocker les informations sur la playlist
@@ -32,7 +32,7 @@ export default function Playlist() {
       })
       .then((response) => {
         setPlaylistTracks(response.items);
-        console.log(playlistTracks);
+        console.log(response.items);
       })
       .catch((error) => {
         console.error("Failed to fetch playlist:", error);
@@ -43,6 +43,10 @@ export default function Playlist() {
     const minutes = Math.floor(duration_ms / 60000);
     const seconds = ((duration_ms % 60000) / 1000).toFixed(0);
     return `${minutes}:${(seconds < 10 ? "0" : "")}${seconds}`;
+  }
+
+  const loadTrack = (trackUri) => {
+    onTrackSelect(trackUri);
   }
 
   return (
@@ -63,8 +67,8 @@ export default function Playlist() {
         )}
       </div>
       <ul className="flex flex-col mt-12 w-full bg-black p-3 sm:p-5 sm:rounded-lg bg-opacity-45 mb-40">
-        <li className="flex items-center my-2 p-2 gap-1">
-          <p className="w-4">#</p>
+        <li className="flex items-center justify-center gap-2 p-2 sm:p-4 rounded">
+          <p>#</p>
           <p className="titre ml-20 w-4/6 sm:w-2/6">Titre</p>
           <p className="album w-3/6 hidden sm:block">Album</p>
           <IoTimeOutline className="size-6" />
@@ -72,8 +76,8 @@ export default function Playlist() {
         {playlistTracks.length > 0 ? (
           playlistTracks.map((track, index) => (
             <React.Fragment key={track.track.id}>
-              <li className="flex items-center gap-2 p-2 sm:p-4 rounded hover:bg-green-500 hover:bg-opacity-75 hover:text-black transition-all">
-                <p className="w-4 mr-1">{index + 1}</p>
+              <li onClick={() => loadTrack(track?.track.uri)} className="flex items-center justify-center gap-2 p-2 sm:p-4 rounded hover:bg-green-500 hover:bg-opacity-75 hover:cursor-pointer  hover:text-black transition-all">
+                <p className="w-8 mr-1">{index + 1}</p>
                 {track.track.album.images.length > 0 ? (
                   <img
                     className="rounded w-12 h-12"

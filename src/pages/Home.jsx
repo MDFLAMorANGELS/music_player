@@ -16,6 +16,8 @@ export default function Home() {
   const [token, setToken] = useState("");
   const [userPlaylists, setUserPlaylists] = useState(null);
   const [loadPlaylist, setLoadPlaylist]= useState(null);
+  const [loadTrack, setLoadTrack]= useState(null);
+
 
   useEffect(() => {
     const token = localStorage.getItem("token")
@@ -44,16 +46,21 @@ export default function Home() {
     setLoadPlaylist(playlistUri);
   };
 
+  const handleTrackSelect = (trackUri) => {
+    console.log("Track sélectionnée:", trackUri);
+    setLoadTrack(trackUri);
+  };
+
   return (
     <>
       <Sidebar user={user} />
         <Routes>
-          <Route path="/playlist/:playlistId" playlistUri={loadPlaylist}  element={<Playlist />} />
+          <Route path="/playlist/:playlistId" playlistUri={loadPlaylist} element={<Playlist onTrackSelect={handleTrackSelect} />} />
           <Route path="/play" element={<Play />} />
           <Route path="/search" element={<Search />} />
           <Route path="/profile"  element={<Profile user={user} userPlaylists={userPlaylists} onPlaylistSelect={handlePlaylistSelect}/>} />
         </Routes>
-      <Player playlistUri={loadPlaylist} />
+      <Player playlistUri={loadPlaylist} trackUri={loadTrack} />
     </>
   );
 }

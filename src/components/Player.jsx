@@ -4,7 +4,7 @@ import { BsVolumeOffFill, BsVolumeUpFill } from "react-icons/bs";
 import { TbPlayerSkipForward, TbPlayerSkipBack } from "react-icons/tb";
 import { PiPlayPause } from "react-icons/pi";
 
-function Player({ playlistUri }) {
+function Player({ playlistUri, trackUri }) {
 
   const [player, setPlayer] = useState(null); // État du lecteur Spotify
   const [deviceId, setDeviceId] = useState(null); // ID du périphérique de lecture
@@ -15,17 +15,29 @@ function Player({ playlistUri }) {
   const [trackDuration, setTrackDuration] = useState(0); // Durée totale de la piste
   const [elapsedTime, setElapsedTime] = useState(0); // Temps écoulé depuis le début de la piste
   const [currentTrackId, setCurrentTrackId] = useState(null); // ID de la piste actuelle
+  const [isSimpleTrackPlaying, setIsSimpleTrackPlaying] = useState(false); // État pour suivre si une simple piste est en cours de lecture
+
 
   // Utiliser useEffect pour écouter les événements player_state_changed
   useEffect(() => {
     if (!player) return;
 
     player.addListener("player_state_changed", (state) => {
-      if (!state) return;
-    
-      const { track_window: { current_track } } = state;
-      const newTrackId = current_track.id; // Obtenir l'ID de la nouvelle piste
-    
+      if (!state || !state.track_window || !state.track_window.current_track) return;
+  
+      const { paused, position, duration } = state;
+  
+      // Vérifier si la piste est terminée
+      if (!paused && position === 0 && duration === 0) {
+        setIsTrackPlaying(false);
+        setElapsedTime(0)
+      }
+      else {
+        setIsTrackPlaying(!paused);
+      }
+  
+      const newTrackId = state.track_window.current_track.id; // Obtenir l'ID de la nouvelle piste
+  
       // Vérifier si la piste a changé
       if (currentTrackId !== newTrackId) {
         setCurrentTrackId(newTrackId);
@@ -48,6 +60,18 @@ function Player({ playlistUri }) {
       // Mettre à jour la durée totale de la piste
       setTrackDuration(track_window.current_track.duration_ms);
     });
+    if (isTrackPlaying) {
+      player.getCurrentState().then(state => {
+        if (!state) {
+          console.error('User is not playing music through the Web Playback SDK');
+          return;
+        }
+      
+        let current_track = state.track_window.current_track;
+      
+        console.log('Currently Playing', current_track);
+      });
+    }
 
     // Retirer les écouteurs d'événements lors du démontage du composant
     return () => {
@@ -72,6 +96,13 @@ function Player({ playlistUri }) {
     // Nettoyer l'intervalle lors du démontage du composant
     return () => clearInterval(intervalId);
   }, [isTrackPlaying]);
+
+  // Utiliser useEffect pour réinitialiser le temps écoulé lorsque la piste se termine
+  useEffect(() => {
+    if (elapsedTime > trackDuration) {
+      setElapsedTime(trackDuration); // Mettre à jour le temps écoulé à la durée totale de la piste
+    }
+  }, [elapsedTime, trackDuration]);
 
   // Utiliser useEffect pour initialiser le lecteur Spotify et obtenir le jeton d'authentification
   useEffect(() => {
@@ -164,8 +195,16 @@ function Player({ playlistUri }) {
   useEffect(() => {
     if (playlistUri) {
       play(playlistUri);
+      setIsSimpleTrackPlaying(false); // Mettre à jour l'état de lecture de simple piste
     }
   }, [playlistUri]);
+
+  useEffect(() => {
+    if (trackUri) {
+      play(trackUri);
+      setIsSimpleTrackPlaying(true); // Mettre à jour l'état de lecture de simple piste
+    }
+  }, [trackUri]);
 
   // Fonction pour basculer la lecture/pause
   const togglePlay = () => {
@@ -246,13 +285,13 @@ function Player({ playlistUri }) {
         </div>
       )}
       <div className="w-full flex justify-evenly items-center p-1 my-2">
-        <button onClick={() => previousTrack()}>
+      <button onClick={() => previousTrack()} disabled={!isTrackPlaying || isSimpleTrackPlaying}>
           <TbPlayerSkipBack className="size-6 hover:scale-110 transition-all" />
         </button>
         <button onClick={togglePlay} className="flex">
           <PiPlayPause className="size-7 hover:scale-110 transition-all" />
         </button>
-        <button onClick={() => nextTrack()}>
+        <button onClick={() => nextTrack()} disabled={!isTrackPlaying || isSimpleTrackPlaying}>
           <TbPlayerSkipForward className="size-6 hover:scale-110 transition-all" />
         </button>
         <div className=" justify-center items-center w-1/3 hidden sm:flex">

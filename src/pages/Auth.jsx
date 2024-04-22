@@ -6,7 +6,7 @@ function Auth() {
   const [, setToken] = useState(localStorage.getItem("token"));
 
   const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;
-  const REDIRECT_URI = "https://music-player-taupe-rho.vercel.app";
+  const REDIRECT_URI = "http://localhost:5173/";
   const AUTH_ENDPOINT = "https://accounts.spotify.com/authorize";
   const RESPONSE_TYPE = "token";
   const SCOPES = ["streaming", "user-read-email", "user-read-private"];

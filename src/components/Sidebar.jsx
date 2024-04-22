@@ -1,12 +1,9 @@
-import { BsCollectionPlay } from "react-icons/bs";
 import { BsMusicNoteList } from "react-icons/bs";
 import { BsSearchHeart } from "react-icons/bs";
 import { Link } from "react-router-dom";
 import {Avatar} from "@nextui-org/react";
 import { useNavigate } from "react-router-dom";
 import { MdExitToApp } from "react-icons/md";
-import { useEffect  } from "react";
-
 
 export default function Sidebar({ user }) {
 
@@ -25,7 +22,7 @@ export default function Sidebar({ user }) {
         className="hover:bg-slate-200 px-3 rounded hover:shadow flex flex-col justify-center items-center w-full"
       >
         <Avatar isBordered className="my-5 min-h-10" color="success" src={user?.images?.[1]?.url} />
-        <h2 className="text-black font-semibold">{user?.display_name}</h2>
+        <p className=" text-black font-semibold text-center">{user?.display_name}</p>
       </Link>
       {/* <Link
         to={"/playlist"}
